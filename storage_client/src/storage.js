@@ -9,6 +9,7 @@ import {
   Button,
   InputGroup,
   FormControl,
+  Form,
 } from "react-bootstrap";
 import ModalHeader from "react-bootstrap/esm/ModalHeader";
 
@@ -19,6 +20,9 @@ const Storage = (props) => {
   const [id, setId] = useState(null);
   const [serverId, setServerId] = useState(null);
   const [storageState, setStorageState] = useState(null);
+  const [type, setType] = useState("r");
+  const [content, setContent] = useState("");
+  const [contentStorage, setContentStorage] = useState("a");
 
   useEffect(() => {
     socket.current = io(ENDPOINT, { autoConnect: false });
@@ -61,14 +65,22 @@ const Storage = (props) => {
     }
   }
   function handleWrite(e, storage) {
+    e.preventDefault();
     socket.current.emit("write", { storage });
   }
   function handleRead(e, storage) {
+    e.preventDefault();
     socket.current.emit("read", { storage });
   }
   function handleRelease(e, storage) {
+    e.preventDefault();
     socket.current.emit("release", { storage });
   }
+  function handleContent(e) {
+    e.preventDefault();
+    socket.current.emit("content", { storage: contentStorage, type, content });
+  }
+
   return (
     <Container
       style={{
@@ -218,6 +230,74 @@ const Storage = (props) => {
               })
             : null}
         </Card>
+      </Row>
+      <Row
+        style={{
+          margin: 0,
+          padding: 8,
+          width: "100%",
+          height: 200,
+          backgroundColor: "white",
+          borderRadius: 4,
+        }}
+      >
+        {storageState ? (
+          <Form style={{ width: "100%" }}>
+            <Form.Row>
+              <Form.Group as={Col} controlId="formGridCity">
+                <Form.Label>Content</Form.Label>
+                <Form.Control
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                  }}
+                  value={content}
+                />
+              </Form.Group>
+            </Form.Row>
+            <Form.Row>
+              <Form.Group as={Col} controlId="formGridState">
+                <Form.Label>Type</Form.Label>
+                <Form.Control
+                  as="select"
+                  defaultValue="r"
+                  value={type}
+                  onChange={(e) => {
+                    setType(e.target.value);
+                  }}
+                >
+                  <option value="r">replace</option>
+                  <option value="a">append</option>
+                </Form.Control>
+              </Form.Group>
+
+              <Form.Group as={Col} controlId="formGridState">
+                <Form.Label>Storage</Form.Label>
+                <Form.Control
+                  as="select"
+                  defaultValue="a"
+                  value={contentStorage}
+                  onChange={(e) => {
+                    setContentStorage(e.target.value);
+                  }}
+                >
+                  {Object.keys(storageState).map((key) => (
+                    <option value={key}>{key}</option>
+                  ))}
+                </Form.Control>
+              </Form.Group>
+            </Form.Row>
+
+            <Button
+              variant="primary"
+              type="submit"
+              onClick={(e) => {
+                handleContent(e);
+              }}
+            >
+              Submit
+            </Button>
+          </Form>
+        ) : null}
       </Row>
     </Container>
   );
